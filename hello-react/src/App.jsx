@@ -4,19 +4,20 @@ import Item from "./Item.jsx";
 import Header from "./Header.jsx";
 import Form from "./Form.jsx";
 
-import { Container, Divider, List } from "@mui/material";
+import { Box, Container, Divider, List, Typography } from "@mui/material";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function App() {
 	const api = "http://localhost:8800/tasks";
 
-	const [data, setData] = useState([]);
+	// const [data, setData] = useState([]);
 
-    useEffect(() => {
-        fetch(api).then(async res => {
-            const tasks = await res.json();
-            setData(tasks);
-        });
-    }, []);
+    // useEffect(() => {
+    //     fetch(api).then(async res => {
+    //         const tasks = await res.json();
+    //         setData(tasks);
+    //     });
+    // }, []);
 
 	// const [data, setData] = useState([
 	// 	{ id: 3, name: "Apple", done: false },
@@ -44,33 +45,90 @@ export default function App() {
 	// 	);
 	// };
 
+	const queryClient = useQueryClient();
+    const { data, isLoading, error } = useQuery({
+
+        queryKey: ["tasks"],
+
+        queryFn: async () => {
+
+            const res = await fetch(api);
+
+            return res.json();
+
+        }
+
+    });
+
+	// const add = async name => {
+    //     const res = await fetch(api, {
+    //         method: "POST",
+    //         body: JSON.stringify({ name }),
+    //         headers: {
+    //             "Content-Type": "application/json"
+    //         },
+    //     });
+
+    //     const task = await res.json();
+    //     setData([task, ...data]);
+    // };
+
+    // const del = id => {
+    //     fetch(`${api}/${id}`, { method: "DELETE" });
+    //     setData(data.filter(item => item.id !== id));
+    // };
+
+    // const toggle = id => {
+    //     fetch(`${api}/${id}/toggle`, { method: "PUT" });
+    //     setData(
+    //         data.map(item => {
+    //             if (item.id === id) item.done = !item.done;
+    //             return item;
+    //         })
+    //     );
+    // };
+
 	const add = async name => {
-        const res = await fetch(api, {
+        await fetch(api, {
+
             method: "POST",
             body: JSON.stringify({ name }),
             headers: {
                 "Content-Type": "application/json"
             },
         });
-
-        const task = await res.json();
-        setData([task, ...data]);
+        await queryClient.invalidateQueries(['tasks']);
     };
 
-    const del = id => {
-        fetch(`${api}/${id}`, { method: "DELETE" });
-        setData(data.filter(item => item.id !== id));
+ 
+
+    const del = async id => {
+        await fetch(`${api}/${id}`, { method: "DELETE" });
+
+        await queryClient.invalidateQueries(['tasks']);
     };
 
-    const toggle = id => {
-        fetch(`${api}/${id}/toggle`, { method: "PUT" });
-        setData(
-            data.map(item => {
-                if (item.id === id) item.done = !item.done;
-                return item;
-            })
+ 
+
+    const toggle = async id => {
+        await fetch(`${api}/${id}/toggle`, { method: "PUT" });
+
+        await queryClient.invalidateQueries(["tasks"]);
+    };
+
+	if(isLoading) {
+        return <Box>
+            <Typography>Loading...</Typography>
+        </Box>
+    } 
+
+    if (error) {
+        return (
+            <Box>
+                <Typography>{error.message}</Typography>
+            </Box>
         );
-    };
+    }
 
 	return (
 		<div>

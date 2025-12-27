@@ -5,7 +5,6 @@ import { prisma } from "../libs/prisma";
 
 import { auth } from "../middlewares/auth";
 
-// router.get("/",auth, async (req, res) => { checking bearer token for auth
 router.get("/", async (req, res) => {
 		const posts = await prisma.post.findMany({
 			orderBy: {
